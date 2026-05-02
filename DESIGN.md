@@ -68,7 +68,7 @@ Extremely minimalist, clean, and calm. Inspired by Notion and Things. Heavy use 
   - Summary/title — bold, 20px, single or two lines max
   - Pills row: issue type + priority as small rounded pills with subtle background tints
 
-### Markdown Editor
+### Description Editor
 
 - Textarea with 1px border (`--color-border`), 12px radius
 - Min-height: 160px

@@ -45,8 +45,8 @@
 
 ## Phase 6: Description Editor
 
-- [ ] Create `MarkdownEditor` component — textarea with placeholder styling
-- [ ] Wire submit button to POST endpoint with Markdown → ADF conversion
+- [ ] Create `DescriptionEditor` component — textarea with placeholder styling
+- [ ] Wire submit button to POST endpoint (sends plain text, converted to ADF server-side)
 - [ ] Add loading state on submit (disable button, show spinner)
 - [ ] Add success feedback (card clears) and error feedback (toast/inline message)
 - [ ] Handle empty submission validation (prevent submitting blank descriptions)
@@ -69,7 +69,7 @@
 ## Phase 9: Testing
 
 - [ ] Unit tests: Jira API client, config validation
-- [ ] Unit tests: Markdown → ADF conversion
+- [ ] Unit tests: Text → ADF conversion
 - [ ] Integration tests: Jira API calls with mocked responses
 - [ ] E2E tests: View cards → submit description → card clears (Playwright)
 - [ ] E2E test: Empty state when no tickets
