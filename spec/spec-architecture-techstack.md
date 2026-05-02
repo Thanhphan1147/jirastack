@@ -8,7 +8,7 @@ tags: architecture, infrastructure, design, app
 
 # Introduction
 
-JiraStack is an extremely minimalist web application that allows users to log in with their Atlassian (Jira Cloud) account, automatically fetch their assigned Jira tickets that lack descriptions, and present them as a visually polished card stack. Users fill in descriptions using a plain text editor; the text is converted to Atlassian Document Format (ADF) server-side before submission. Completed cards clear away with fluid animations. This specification defines the technology stack, architectural decisions, and key considerations for the application.
+JiraStack is an extremely minimalist web application that allows users to log in with their Atlassian (Jira Cloud) account, automatically fetch their Jira tickets (assigned to or created by them) that lack descriptions, and present them as a visually polished card stack. Users fill in descriptions using a plain text editor; the text is converted to Atlassian Document Format (ADF) server-side before submission. Completed cards clear away with fluid animations. This specification defines the technology stack, architectural decisions, and key considerations for the application.
 
 ## 1. Purpose & Scope
 
@@ -64,7 +64,7 @@ This specification covers:
 
 ### Application Behavior
 
-- **REQ-001**: On login, the application SHALL automatically fetch all Jira tickets assigned to the authenticated user that have an empty or missing description.
+- **REQ-001**: On login, the application SHALL automatically fetch all Jira tickets assigned to or created by the authenticated user that have an empty or missing description and are not in a Done status category.
 - **REQ-002**: Tickets SHALL be displayed as a **card stack** — one card visible at a time, with a peek of cards beneath.
 - **REQ-003**: Each card SHALL display at minimum: issue key, summary (title), issue type, and priority.
 - **REQ-004**: The user SHALL fill in the description using a **plain text area**.
@@ -104,14 +104,14 @@ Authentication uses Jira API tokens with HTTP Basic Auth. The `Authorization` he
 
 | Operation | Endpoint | Method | Purpose |
 | --------- | -------- | ------ | ------- |
-| Search issues | `{JIRA_BASE_URL}/rest/api/3/search/jql` | POST | Fetch assigned tickets with empty descriptions using JQL |
+| Search issues | `{JIRA_BASE_URL}/rest/api/3/search/jql` | POST | Fetch tickets assigned to or created by the user with empty descriptions using JQL |
 | Update issue | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}` | PUT | Update ticket description with ADF content |
 | Get myself | `{JIRA_BASE_URL}/rest/api/3/myself` | GET | Get current user profile |
 
 ### JQL Query for Fetching Tickets
 
 ```
-assignee = currentUser() AND description is EMPTY AND statusCategory != Done ORDER BY priority DESC, created ASC
+(assignee = currentUser() OR creator = currentUser()) AND description is EMPTY AND statusCategory != Done ORDER BY priority DESC, created ASC
 ```
 
 ### ADF Document Structure (simplified example)
@@ -148,9 +148,9 @@ const config = {
 
 ## 5. Acceptance Criteria
 
-- **AC-001**: Given the app starts with valid `JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, and `JIRA_BASE_URL` env vars, When a user visits the app, Then assigned tickets with empty descriptions are fetched and displayed.
-- **AC-002**: Given the app is running, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
-- **AC-003**: Given an authenticated user, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
+- **AC-001**: Given the app starts with valid `JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, and `JIRA_BASE_URL` env vars, When a user visits the app, Then tickets assigned to or created by the user with empty descriptions are fetched and displayed.
+- **AC-002**: Given the app is running, When the main view loads, Then all matching tickets (not Done) with empty descriptions are fetched and displayed as a card stack.
+- **AC-003**: Given an authenticated user, When the main view loads, Then tickets they are assigned to or created are fetched and displayed as a card stack.
 - **AC-004**: Given a card is displayed, When the user writes a plain text description and submits, Then the text is converted to ADF paragraphs and the Jira ticket is updated via the API.
 - **AC-005**: Given a ticket is successfully updated, When the API responds with success, Then the card animates out and the next card becomes active.
 - **AC-006**: Given all cards are cleared, When no tickets remain, Then a "done" / empty state is displayed.
@@ -205,7 +205,7 @@ const config = {
 ### Edge Case: No Tickets Without Descriptions
 
 ```
-Given: The user logs in and all assigned tickets already have descriptions.
+Given: The user logs in and all their tickets already have descriptions.
 Expected: The app shows the "done" / empty state immediately with a message like
           "All your tickets have descriptions. Nice work!"
 ```
@@ -240,7 +240,7 @@ Expected: ADF doc with 4 nodes — paragraph("Line one"), empty paragraph,
 - [ ] SvelteKit project initializes and builds successfully with `adapter-node`.
 - [ ] Tailwind CSS is integrated and utility classes render correctly.
 - [ ] OAuth 2.0 (3LO) flow completes end-to-end (future phase).
-- [ ] JQL query returns only assigned tickets with empty descriptions.
+- [ ] JQL query returns only tickets assigned to or created by the user with empty descriptions, excluding Done.
 - [ ] Plain text input is correctly converted to valid ADF paragraphs.
 - [ ] Jira API accepts the ADF payload and updates the ticket description.
 - [ ] Card stack renders with correct layering and animations.
