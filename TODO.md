@@ -28,12 +28,11 @@
 - [ ] Create server endpoint `GET /api/tickets` — returns tickets for the configured user
 - [ ] Create server endpoint `POST /api/tickets/[key]/description` — submits description update
 
-## Phase 4: Markdown to ADF Conversion
+## Phase 4: Plain Text to ADF Conversion
 
-- [ ] Integrate markdown-to-ADF conversion library
-- [ ] Handle core Markdown constructs: headings, bold, italic, code, lists, links
-- [ ] Handle code blocks with language annotation
-- [ ] Add unit tests for conversion edge cases (nested lists, inline formatting, empty input)
+- [ ] Create `textToAdf()` — wraps plain text lines into ADF paragraph nodes
+- [ ] Wire POST endpoint to accept plain text and convert server-side
+- [ ] Add unit tests for conversion (empty input, multiline, whitespace trimming)
 
 ## Phase 5: Card Stack UI
 
