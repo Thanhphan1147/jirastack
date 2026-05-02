@@ -104,7 +104,7 @@ Authentication uses Jira API tokens with HTTP Basic Auth. The `Authorization` he
 
 | Operation | Endpoint | Method | Purpose |
 | --------- | -------- | ------ | ------- |
-| Search issues | `{JIRA_BASE_URL}/rest/api/3/search` | POST | Fetch assigned tickets with empty descriptions using JQL |
+| Search issues | `{JIRA_BASE_URL}/rest/api/3/search/jql` | POST | Fetch assigned tickets with empty descriptions using JQL |
 | Update issue | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}` | PUT | Update ticket description with ADF content |
 | Get myself | `{JIRA_BASE_URL}/rest/api/3/myself` | GET | Get current user profile |
 
