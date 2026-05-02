@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CardStack from '$lib/components/CardStack.svelte';
+	import DescriptionEditor from '$lib/components/DescriptionEditor.svelte';
 
 	interface Ticket {
 		key: string;
@@ -12,6 +13,10 @@
 	let tickets = $state<Ticket[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let totalCount = $state(0);
+
+	let currentTicket = $derived(tickets.length > 0 ? tickets[0] : null);
+	let completedCount = $derived(totalCount - tickets.length);
 
 	async function fetchTickets() {
 		try {
@@ -22,11 +27,16 @@
 				return;
 			}
 			tickets = data.tickets;
+			totalCount = data.tickets.length;
 		} catch {
 			error = 'Failed to connect to server';
 		} finally {
 			loading = false;
 		}
+	}
+
+	function handleDescriptionSubmitted() {
+		tickets = tickets.slice(1);
 	}
 
 	$effect(() => {
@@ -37,6 +47,11 @@
 <div class="min-h-screen bg-[#FAFAFA]">
 	<header class="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-6">
 		<span class="text-lg font-semibold text-gray-900">JiraStack</span>
+		{#if !loading && !error && totalCount > 0}
+			<span class="text-[13px] text-gray-500">
+				{tickets.length} of {totalCount} remaining
+			</span>
+		{/if}
 	</header>
 
 	<main class="mx-auto max-w-[640px] px-6 py-8">
@@ -50,6 +65,29 @@
 			</div>
 		{:else}
 			<CardStack {tickets} />
+
+			{#if currentTicket}
+				{#key currentTicket.key}
+					<DescriptionEditor
+						ticketKey={currentTicket.key}
+						onsubmit={handleDescriptionSubmitted}
+					/>
+				{/key}
+			{/if}
+
+			{#if totalCount > 0 && tickets.length > 0}
+				<div class="mt-6">
+					<div class="h-1 overflow-hidden rounded-full bg-gray-200">
+						<div
+							class="h-full rounded-full bg-teal-600 transition-all duration-500"
+							style="width: {(completedCount / totalCount) * 100}%"
+						></div>
+					</div>
+					<p class="mt-2 text-center text-[13px] text-gray-500">
+						{completedCount} of {totalCount} tickets completed
+					</p>
+				</div>
+			{/if}
 		{/if}
 	</main>
 </div>
