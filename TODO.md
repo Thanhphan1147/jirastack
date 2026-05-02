@@ -12,25 +12,20 @@
 - [ ] Add `.env.example` with all required variables documented
 - [ ] Set up Vitest and Playwright configs
 
-## Phase 2: Authentication (OAuth 2.0 3LO)
+## Phase 2: API Token Authentication
 
-- [ ] Register OAuth 2.0 app in Atlassian Developer Console (manual step, document in README)
-- [ ] Implement `/auth/login` route — redirect to Atlassian authorize URL with required scopes
-- [ ] Implement `/auth/callback` route — exchange authorization code for tokens server-side
-- [ ] Create in-memory session store (Map keyed by session ID)
-- [ ] Set secure HTTP-only session cookie on successful auth
-- [ ] Implement token refresh logic (auto-refresh on expiry)
-- [ ] Implement `/auth/logout` route — clear session and cookie
-- [ ] Add SvelteKit hooks for session validation on protected routes
-- [ ] Fetch accessible resources (cloud ID) after token exchange
+- [ ] Configure environment variables (JIRA_API_TOKEN, JIRA_USER_EMAIL, JIRA_BASE_URL)
+- [ ] Create Jira auth helper — builds Basic auth header from email + token
+- [ ] Remove OAuth routes, session store, and hooks
+- [ ] Add simple server-side validation that env vars are set on startup
 
 ## Phase 3: Jira API Integration
 
 - [ ] Create Jira API client module (`lib/server/jira.ts`)
 - [ ] Implement `fetchTicketsWithoutDescription()` — JQL search for assigned tickets with empty descriptions
 - [ ] Implement `updateTicketDescription(issueKey, adfContent)` — PUT description to Jira API
-- [ ] Add error handling for 401 (trigger token refresh), 429 (rate limit with retry), 5xx
-- [ ] Create server endpoint `GET /api/tickets` — returns tickets for authenticated user
+- [ ] Add error handling for 401 (invalid token), 429 (rate limit with retry), 5xx
+- [ ] Create server endpoint `GET /api/tickets` — returns tickets for the configured user
 - [ ] Create server endpoint `POST /api/tickets/[key]/description` — submits description update
 
 ## Phase 4: Markdown to ADF Conversion
@@ -59,9 +54,8 @@
 
 ## Phase 7: Page Layout & Navigation
 
-- [ ] Create top bar component (wordmark + user avatar/name)
+- [ ] Create top bar component (wordmark + user info)
 - [ ] Create main page layout (centered 640px column)
-- [ ] Implement login page with "Login with Jira" button
 - [ ] Implement main view (card stack + editor + progress)
 - [ ] Implement empty/done state ("All caught up!")
 - [ ] Add progress indicator (X of Y tickets remaining)
@@ -70,20 +64,29 @@
 
 - [ ] Handle no tickets state (empty on first load)
 - [ ] Handle API rate limiting (429) with user-facing message and retry
-- [ ] Handle expired refresh token — redirect to re-auth with message
+- [ ] Handle invalid API token — show clear error message
 - [ ] Handle network errors gracefully (offline/timeout)
-- [ ] Handle concurrent tab usage (same session cookie)
 
 ## Phase 9: Testing
 
-- [ ] Unit tests: session store, token refresh logic
+- [ ] Unit tests: Jira API client, config validation
 - [ ] Unit tests: Markdown → ADF conversion
-- [ ] Unit tests: JQL query builder, API response parsing
-- [ ] Integration tests: OAuth flow with mocked Atlassian endpoints (MSW)
 - [ ] Integration tests: Jira API calls with mocked responses
-- [ ] E2E tests: Login → view cards → submit description → card clears (Playwright)
+- [ ] E2E tests: View cards → submit description → card clears (Playwright)
 - [ ] E2E test: Empty state when no tickets
 
 ## Phase 10: Documentation
 
-- [ ] Write README: setup instructions, Atlassian app registration, env vars, running locally
+- [ ] Write README: setup instructions, API token generation, env vars, running locally
+
+## Phase 11: OAuth 2.0 (3LO) — Multi-User Login (Future)
+
+- [ ] Register OAuth 2.0 app in Atlassian Developer Console
+- [ ] Implement `/auth/login` route — redirect to Atlassian authorize URL
+- [ ] Implement `/auth/callback` route — exchange authorization code for tokens
+- [ ] Create in-memory session store (Map keyed by session ID)
+- [ ] Set secure HTTP-only session cookie on successful auth
+- [ ] Implement token refresh logic (auto-refresh on expiry)
+- [ ] Implement `/auth/logout` route — clear session and cookie
+- [ ] Add SvelteKit hooks for session validation on protected routes
+- [ ] Fetch accessible resources (cloud ID) after token exchange

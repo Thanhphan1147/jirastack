@@ -9,15 +9,22 @@ function required(name: string): string {
 }
 
 export const config = {
-	atlassian: {
-		get clientId() {
-			return required('ATLASSIAN_CLIENT_ID');
+	jira: {
+		get apiToken() {
+			return required('JIRA_API_TOKEN');
 		},
-		get clientSecret() {
-			return required('ATLASSIAN_CLIENT_SECRET');
+		get userEmail() {
+			return required('JIRA_USER_EMAIL');
 		},
-		get redirectUri() {
-			return required('ATLASSIAN_REDIRECT_URI');
+		get baseUrl() {
+			return required('JIRA_BASE_URL').replace(/\/$/, '');
 		}
 	}
 } as const;
+
+export function getJiraAuthHeader(): string {
+	const credentials = Buffer.from(`${config.jira.userEmail}:${config.jira.apiToken}`).toString(
+		'base64'
+	);
+	return `Basic ${credentials}`;
+}

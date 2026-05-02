@@ -4,9 +4,9 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      - ATLASSIAN_CLIENT_ID=${ATLASSIAN_CLIENT_ID}
-      - ATLASSIAN_CLIENT_SECRET=${ATLASSIAN_CLIENT_SECRET}
-      - ATLASSIAN_REDIRECT_URI=${ATLASSIAN_REDIRECT_URI:-http://localhost:3000/auth/callback}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      - JIRA_USER_EMAIL=${JIRA_USER_EMAIL}
+      - JIRA_BASE_URL=${JIRA_BASE_URL}
       - ORIGIN=${ORIGIN:-http://localhost:3000}
       - PORT=3000
     restart: unless-stopped

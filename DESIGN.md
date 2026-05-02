@@ -57,7 +57,7 @@ Extremely minimalist, clean, and calm. Inspired by Notion and Things. Heavy use 
 
 - Sticky, height 56px, white background with 1px bottom border (`--color-border`)
 - Left: "JiraStack" wordmark in `--color-text`, font-weight 600
-- Right: User avatar (32px circle) + display name in `--color-text-secondary`
+- Right: User display name in `--color-text-secondary` (sourced from Jira API `/myself`)
 
 ### Card Stack
 

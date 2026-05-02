@@ -56,13 +56,11 @@ This specification covers:
 
 ### Authentication & Authorization
 
-- **SEC-001**: Authentication SHALL use Atlassian's **OAuth 2.0 (3LO)** authorization code grant flow.
-- **SEC-002**: The OAuth client credentials (client ID, client secret) SHALL be configured via **environment variables**, never committed to source code.
-- **SEC-003**: Token exchange (authorization code → access token + refresh token) SHALL occur **server-side** in SvelteKit endpoints/hooks to prevent client-side exposure of secrets.
-- **SEC-004**: Access tokens SHALL be refreshed automatically when expired (tokens expire after 1 hour). The refresh logic SHALL be transparent to the user.
-- **SEC-005**: Sessions SHALL be stored **in-memory** on the server. Sessions are lost on server restart; users must re-authenticate.
-- **SEC-006**: All communication with Atlassian APIs SHALL occur over **HTTPS**.
-- **SEC-007**: The application SHALL request only the minimum required OAuth scopes: `read:jira-work`, `write:jira-work`, and `offline_access` (for refresh tokens).
+- **SEC-001**: For the initial implementation, authentication SHALL use a **Jira API token** with basic auth (email + token), configured via environment variables (`JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, `JIRA_BASE_URL`).
+- **SEC-002**: API credentials SHALL be configured via **environment variables**, never committed to source code.
+- **SEC-003**: All Jira API calls SHALL occur **server-side** in SvelteKit endpoints to prevent client-side exposure of credentials.
+- **SEC-004**: All communication with Jira APIs SHALL occur over **HTTPS**.
+- **SEC-005**: OAuth 2.0 (3LO) support SHALL be added in a future phase to enable multi-user login.
 
 ### Application Behavior
 
@@ -73,7 +71,7 @@ This specification covers:
 - **REQ-005**: On submission, the Markdown content SHALL be converted to ADF and pushed to the Jira Cloud API to update the ticket's description.
 - **REQ-006**: After successful submission, the card SHALL animate out of the stack (clear away) and the next card SHALL become active.
 - **REQ-007**: When all tickets are cleared, the application SHALL display a "done" state.
-- **REQ-008**: The application SHALL support **multiple concurrent users**, each with their own session and Jira context.
+- **REQ-008**: The application SHALL initially support a **single user** via API token. Multi-user support via OAuth 2.0 (3LO) SHALL be added in a future phase.
 
 ### Constraints
 
@@ -92,23 +90,23 @@ This specification covers:
 
 ## 4. Interfaces & Data Contracts
 
-### Atlassian OAuth 2.0 (3LO) Flow
+### Authentication (API Token — Initial)
 
-| Step | Endpoint | Method | Purpose |
-| ---- | -------- | ------ | ------- |
-| 1. Authorize | `https://auth.atlassian.com/authorize` | GET (redirect) | Redirect user to Atlassian login/consent screen |
-| 2. Callback | `/auth/callback` (app route) | GET | Receive authorization code from Atlassian |
-| 3. Token Exchange | `https://auth.atlassian.com/oauth/token` | POST | Exchange authorization code for access + refresh tokens |
-| 4. Token Refresh | `https://auth.atlassian.com/oauth/token` | POST | Exchange refresh token for new access token |
-| 5. Accessible Resources | `https://api.atlassian.com/oauth/token/accessible-resources` | GET | Retrieve the cloud ID of the user's Jira site |
+Authentication uses Jira API tokens with HTTP Basic Auth. The `Authorization` header is constructed as `Basic base64(email:token)`.
+
+| Environment Variable | Purpose |
+| ---- | ------- |
+| `JIRA_API_TOKEN` | Jira API token generated from https://id.atlassian.com/manage-profile/security/api-tokens |
+| `JIRA_USER_EMAIL` | Email address of the Jira account |
+| `JIRA_BASE_URL` | Jira Cloud instance URL (e.g., `https://yoursite.atlassian.net`) |
 
 ### Jira Cloud REST API
 
 | Operation | Endpoint | Method | Purpose |
 | --------- | -------- | ------ | ------- |
-| Search issues | `https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search` | POST | Fetch assigned tickets with empty descriptions using JQL |
-| Update issue | `https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/issue/{issueKey}` | PUT | Update ticket description with ADF content |
-| Get myself | `https://api.atlassian.com/me` | GET | Get current user profile |
+| Search issues | `{JIRA_BASE_URL}/rest/api/3/search` | POST | Fetch assigned tickets with empty descriptions using JQL |
+| Update issue | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}` | PUT | Update ticket description with ADF content |
+| Get myself | `{JIRA_BASE_URL}/rest/api/3/myself` | GET | Get current user profile |
 
 ### JQL Query for Fetching Tickets
 
@@ -136,29 +134,27 @@ assignee = currentUser() AND description is EMPTY ORDER BY priority DESC, create
 }
 ```
 
-### Internal Session Shape (TypeScript)
+### Server-Side Config Shape (TypeScript)
 
 ```typescript
-interface UserSession {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number; // Unix timestamp (ms)
-  cloudId: string;
-  userDisplayName: string;
-  userAccountId: string;
-}
+const config = {
+  jira: {
+    apiToken: string;   // JIRA_API_TOKEN
+    userEmail: string;  // JIRA_USER_EMAIL
+    baseUrl: string;    // JIRA_BASE_URL
+  }
+};
 ```
 
 ## 5. Acceptance Criteria
 
-- **AC-001**: Given a user visits the app unauthenticated, When they click "Login with Jira", Then they are redirected to Atlassian's OAuth consent screen.
-- **AC-002**: Given a user completes Atlassian login, When the callback is received, Then an in-memory session is created and the user is redirected to the main view.
+- **AC-001**: Given the app starts with valid `JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, and `JIRA_BASE_URL` env vars, When a user visits the app, Then assigned tickets with empty descriptions are fetched and displayed.
+- **AC-002**: Given the app is running, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
 - **AC-003**: Given an authenticated user, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
 - **AC-004**: Given a card is displayed, When the user writes a Markdown description and submits, Then the Markdown is converted to ADF and the Jira ticket is updated via the API.
 - **AC-005**: Given a ticket is successfully updated, When the API responds with success, Then the card animates out and the next card becomes active.
 - **AC-006**: Given all cards are cleared, When no tickets remain, Then a "done" / empty state is displayed.
-- **AC-007**: Given a user's access token has expired, When an API call is made, Then the token is silently refreshed using the refresh token before retrying.
-- **AC-008**: Given the server restarts, When a user visits the app, Then they must re-authenticate (no persisted sessions).
+- **AC-007**: Given invalid or missing API token env vars, When the app starts, Then it SHALL fail with a clear error message.
 
 ## 6. Test Automation Strategy
 
@@ -177,7 +173,7 @@ interface UserSession {
 | **Tailwind CSS** | Utility-first approach enables rapid UI development with consistent design tokens. No need for a component library — the app has very few UI elements. |
 | **Motion library** | Card stack animations are a core UX element. A dedicated motion library ensures smooth, polished transitions that feel native. |
 | **Markdown → ADF** | Markdown is universally understood by developers (the target audience). Converting to ADF on submission ensures compatibility with Jira's editor. This avoids the complexity of embedding a full ADF/rich-text editor. |
-| **In-memory sessions** | Eliminates database dependency. Acceptable trade-off for a lightweight tool — re-login after restart is a minor inconvenience. |
+| **In-memory sessions** | Not needed for API token auth. Will be re-introduced with OAuth. |
 | **Docker + adapter-node** | Self-hosted requirement. Docker provides reproducible builds. adapter-node is SvelteKit's official adapter for Node.js servers. |
 | **No database** | The app is stateless by design. Tickets are fetched from Jira on demand. Sessions are ephemeral. Adding a database would contradict the minimalist philosophy. |
 
@@ -185,12 +181,11 @@ interface UserSession {
 
 ### External Systems
 
-- **EXT-001**: **Atlassian Jira Cloud** — Primary data source. All ticket data is read from and written to Jira via REST API v3.
-- **EXT-002**: **Atlassian Identity (auth.atlassian.com)** — OAuth 2.0 provider for user authentication and token management.
+- **EXT-001**: **Atlassian Jira Cloud** — Primary data source. All ticket data is read from and written to Jira via REST API v3. Authenticated with API token (basic auth).
 
 ### Third-Party Services
 
-- **SVC-001**: **Atlassian OAuth 2.0 (3LO)** — Authorization and token exchange. Requires a registered OAuth 2.0 app in the [Atlassian Developer Console](https://developer.atlassian.com/console/myapps/).
+- **SVC-001**: **Jira API Token** — Generated from [Atlassian Account Security](https://id.atlassian.com/manage-profile/security/api-tokens). No OAuth app registration required for initial implementation.
 
 ### Infrastructure Dependencies
 
@@ -223,21 +218,11 @@ Expected: The app displays a user-friendly error and retries after the
           Retry-After period. The user is not logged out.
 ```
 
-### Edge Case: OAuth Refresh Token Expired or Revoked
+### Edge Case: Invalid API Token
 
 ```
-Given: The refresh token is no longer valid (revoked or expired after 90 days of inactivity).
-Expected: The app redirects the user to re-authenticate. A clear message is shown:
-          "Your session has expired. Please log in again."
-```
-
-### Edge Case: Concurrent Sessions (Same User, Multiple Tabs)
-
-```
-Given: A user has the app open in two browser tabs.
-Expected: Both tabs share the same server session (keyed by session cookie).
-          Submitting a description in one tab should be reflected if the other tab
-          refreshes its ticket list.
+Given: The JIRA_API_TOKEN or JIRA_USER_EMAIL is invalid or revoked.
+Expected: The app displays a clear error: "Failed to connect to Jira. Check your API token and email."
 ```
 
 ### Edge Case: Markdown with Complex Formatting
