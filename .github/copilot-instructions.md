@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-JiraStack is a minimalist SPA that connects to Jira Cloud via API token, fetches assigned tickets without descriptions as a card stack, lets users write descriptions in Markdown (converted to ADF), and clears cards as they submit.
+JiraStack is a minimalist SPA that connects to Jira Cloud via API token, fetches assigned tickets without descriptions as a card stack, lets users write descriptions in plain text (converted to ADF server-side), and clears cards as they submit.
 
 ## Tech Stack
 
@@ -20,12 +20,12 @@ src/
     api/tickets/    # GET /api/tickets, POST /api/tickets/[key]/description
   lib/
     server/         # Server-only: Jira API client, config
-    components/     # Svelte UI components (CardStack, TicketCard, MarkdownEditor)
+    components/     # Svelte UI components (CardStack, TicketCard, DescriptionEditor)
 ```
 
 - **Auth uses Jira API token** (Basic auth) configured via env vars (`JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, `JIRA_BASE_URL`). OAuth 2.0 (3LO) is planned for a future phase.
 - **Jira API calls** go through `lib/server/jira.ts`, which uses Basic auth headers.
-- **Markdown → ADF conversion** happens server-side before POSTing to Jira.
+- **Plain text → ADF conversion** happens server-side via `textToAdf()` before POSTing to Jira.
 
 ## Key Conventions
 

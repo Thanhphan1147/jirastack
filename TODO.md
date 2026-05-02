@@ -28,12 +28,11 @@
 - [ ] Create server endpoint `GET /api/tickets` — returns tickets for the configured user
 - [ ] Create server endpoint `POST /api/tickets/[key]/description` — submits description update
 
-## Phase 4: Markdown to ADF Conversion
+## Phase 4: Plain Text to ADF Conversion
 
-- [ ] Integrate markdown-to-ADF conversion library
-- [ ] Handle core Markdown constructs: headings, bold, italic, code, lists, links
-- [ ] Handle code blocks with language annotation
-- [ ] Add unit tests for conversion edge cases (nested lists, inline formatting, empty input)
+- [ ] Create `textToAdf()` — wraps plain text lines into ADF paragraph nodes
+- [ ] Wire POST endpoint to accept plain text and convert server-side
+- [ ] Add unit tests for conversion (empty input, multiline, whitespace trimming)
 
 ## Phase 5: Card Stack UI
 
@@ -46,8 +45,8 @@
 
 ## Phase 6: Description Editor
 
-- [ ] Create `MarkdownEditor` component — textarea with placeholder styling
-- [ ] Wire submit button to POST endpoint with Markdown → ADF conversion
+- [ ] Create `DescriptionEditor` component — textarea with placeholder styling
+- [ ] Wire submit button to POST endpoint (sends plain text, converted to ADF server-side)
 - [ ] Add loading state on submit (disable button, show spinner)
 - [ ] Add success feedback (card clears) and error feedback (toast/inline message)
 - [ ] Handle empty submission validation (prevent submitting blank descriptions)
@@ -70,7 +69,7 @@
 ## Phase 9: Testing
 
 - [ ] Unit tests: Jira API client, config validation
-- [ ] Unit tests: Markdown → ADF conversion
+- [ ] Unit tests: Text → ADF conversion
 - [ ] Integration tests: Jira API calls with mocked responses
 - [ ] E2E tests: View cards → submit description → card clears (Playwright)
 - [ ] E2E test: Empty state when no tickets

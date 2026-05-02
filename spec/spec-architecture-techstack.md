@@ -8,7 +8,7 @@ tags: architecture, infrastructure, design, app
 
 # Introduction
 
-JiraStack is an extremely minimalist web application that allows users to log in with their Atlassian (Jira Cloud) account, automatically fetch their assigned Jira tickets that lack descriptions, and present them as a visually polished card stack. Users fill in descriptions using a Markdown editor; completed cards clear away with fluid animations. This specification defines the technology stack, architectural decisions, and key considerations for the application.
+JiraStack is an extremely minimalist web application that allows users to log in with their Atlassian (Jira Cloud) account, automatically fetch their assigned Jira tickets that lack descriptions, and present them as a visually polished card stack. Users fill in descriptions using a plain text editor; the text is converted to Atlassian Document Format (ADF) server-side before submission. Completed cards clear away with fluid animations. This specification defines the technology stack, architectural decisions, and key considerations for the application.
 
 ## 1. Purpose & Scope
 
@@ -50,7 +50,7 @@ This specification covers:
 - **STK-001**: The frontend framework SHALL be **SvelteKit** (latest stable, Svelte 5).
 - **STK-002**: The CSS framework SHALL be **Tailwind CSS v4+**.
 - **STK-003**: Card stack animations SHALL use **Motion One for Svelte** (`svelte-motion` or equivalent motion library) for polished swipe/clear transitions.
-- **STK-004**: The Markdown editor SHALL convert user input to **Atlassian Document Format (ADF)** before submitting to the Jira API. A library such as `md-to-adf` or equivalent SHALL be used for this conversion.
+- **STK-004**: The description editor SHALL accept **plain text** input and convert it to **Atlassian Document Format (ADF)** server-side before submitting to the Jira API. Each line of text is wrapped in an ADF paragraph node.
 - **STK-005**: The application SHALL be deployed as a **Docker container** running a Node.js-based SvelteKit server (using `@sveltejs/adapter-node`).
 - **STK-006**: The application SHALL use **TypeScript** throughout (both server and client code).
 
@@ -67,8 +67,8 @@ This specification covers:
 - **REQ-001**: On login, the application SHALL automatically fetch all Jira tickets assigned to the authenticated user that have an empty or missing description.
 - **REQ-002**: Tickets SHALL be displayed as a **card stack** — one card visible at a time, with a peek of cards beneath.
 - **REQ-003**: Each card SHALL display at minimum: issue key, summary (title), issue type, and priority.
-- **REQ-004**: The user SHALL fill in the description using a **Markdown text area**.
-- **REQ-005**: On submission, the Markdown content SHALL be converted to ADF and pushed to the Jira Cloud API to update the ticket's description.
+- **REQ-004**: The user SHALL fill in the description using a **plain text area**.
+- **REQ-005**: On submission, the plain text SHALL be converted to ADF (each line becomes a paragraph node) and pushed to the Jira Cloud API to update the ticket's description.
 - **REQ-006**: After successful submission, the card SHALL animate out of the stack (clear away) and the next card SHALL become active.
 - **REQ-007**: When all tickets are cleared, the application SHALL display a "done" state.
 - **REQ-008**: The application SHALL initially support a **single user** via API token. Multi-user support via OAuth 2.0 (3LO) SHALL be added in a future phase.
@@ -151,14 +151,14 @@ const config = {
 - **AC-001**: Given the app starts with valid `JIRA_API_TOKEN`, `JIRA_USER_EMAIL`, and `JIRA_BASE_URL` env vars, When a user visits the app, Then assigned tickets with empty descriptions are fetched and displayed.
 - **AC-002**: Given the app is running, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
 - **AC-003**: Given an authenticated user, When the main view loads, Then all assigned tickets with empty descriptions are fetched and displayed as a card stack.
-- **AC-004**: Given a card is displayed, When the user writes a Markdown description and submits, Then the Markdown is converted to ADF and the Jira ticket is updated via the API.
+- **AC-004**: Given a card is displayed, When the user writes a plain text description and submits, Then the text is converted to ADF paragraphs and the Jira ticket is updated via the API.
 - **AC-005**: Given a ticket is successfully updated, When the API responds with success, Then the card animates out and the next card becomes active.
 - **AC-006**: Given all cards are cleared, When no tickets remain, Then a "done" / empty state is displayed.
 - **AC-007**: Given invalid or missing API token env vars, When the app starts, Then it SHALL fail with a clear error message.
 
 ## 6. Test Automation Strategy
 
-- **Test Levels**: Unit tests for Markdown-to-ADF conversion, server-side auth logic; integration tests for API interactions (mocked); end-to-end tests for the login → card → submit flow.
+- **Test Levels**: Unit tests for text-to-ADF conversion, server-side config logic; integration tests for API interactions (mocked); end-to-end tests for the card → submit flow.
 - **Frameworks**: Vitest (unit/integration), Playwright (E2E), Svelte Testing Library (component tests).
 - **Test Data Management**: Mock Jira API responses using MSW (Mock Service Worker) or Vitest mocks. No real Jira credentials in CI.
 - **CI/CD Integration**: GitHub Actions pipeline running lint, type-check, unit tests, and E2E tests on every push.
@@ -172,7 +172,7 @@ const config = {
 | **SvelteKit** | Minimal boilerplate, built-in server-side capabilities for OAuth, small bundle size aligned with the "minimalist" philosophy. Svelte 5's runes provide clean reactivity without external state management. |
 | **Tailwind CSS** | Utility-first approach enables rapid UI development with consistent design tokens. No need for a component library — the app has very few UI elements. |
 | **Motion library** | Card stack animations are a core UX element. A dedicated motion library ensures smooth, polished transitions that feel native. |
-| **Markdown → ADF** | Markdown is universally understood by developers (the target audience). Converting to ADF on submission ensures compatibility with Jira's editor. This avoids the complexity of embedding a full ADF/rich-text editor. |
+| **Markdown → ADF** | Replaced with plain text → ADF. Markdown adds complexity without clear value for the minimalist use case. Plain text wrapped in ADF paragraphs is sufficient for ticket descriptions and avoids the need for a Markdown parsing library. |
 | **In-memory sessions** | Not needed for API token auth. Will be re-introduced with OAuth. |
 | **Docker + adapter-node** | Self-hosted requirement. Docker provides reproducible builds. adapter-node is SvelteKit's official adapter for Node.js servers. |
 | **No database** | The app is stateless by design. Tickets are fetched from Jira on demand. Sessions are ephemeral. Adding a database would contradict the minimalist philosophy. |
@@ -197,7 +197,7 @@ const config = {
 - **PLT-001**: **SvelteKit** with `@sveltejs/adapter-node` — Full-stack framework and server adapter.
 - **PLT-002**: **Tailwind CSS v4+** — Utility-first CSS framework.
 - **PLT-003**: **Svelte motion library** — Animation library for card stack transitions.
-- **PLT-004**: **Markdown-to-ADF conversion library** — Converts user-written Markdown to Atlassian Document Format.
+- **PLT-004**: **Text-to-ADF conversion** — Custom `textToAdf()` function wraps plain text lines into ADF paragraph nodes. No external library required.
 - **PLT-005**: **TypeScript** — Type-safe development across server and client code.
 
 ## 9. Examples & Edge Cases
@@ -225,40 +225,29 @@ Given: The JIRA_API_TOKEN or JIRA_USER_EMAIL is invalid or revoked.
 Expected: The app displays a clear error: "Failed to connect to Jira. Check your API token and email."
 ```
 
-### Edge Case: Markdown with Complex Formatting
-
-```markdown
-## Acceptance Criteria
-- [ ] User can log in
-- [ ] Tickets are displayed
-- **Bold** and _italic_ and `inline code`
-
-​```python
-def hello():
-    print("world")
-​```
-```
+### Edge Case: Plain Text Conversion
 
 ```
-Expected: The above Markdown is converted to valid ADF with heading, bullet list,
-          text formatting marks, and a code block node. The conversion library
-          must handle these common Markdown constructs.
+Input: "Line one\n\nLine two\nLine three"
+Expected: ADF doc with 4 nodes — paragraph("Line one"), empty paragraph,
+          paragraph("Line two"), paragraph("Line three"). Trailing blank
+          lines are trimmed. Empty/whitespace-only input produces a single
+          empty paragraph.
 ```
 
 ## 10. Validation Criteria
 
 - [ ] SvelteKit project initializes and builds successfully with `adapter-node`.
 - [ ] Tailwind CSS is integrated and utility classes render correctly.
-- [ ] OAuth 2.0 (3LO) flow completes end-to-end: login → consent → callback → session created.
-- [ ] Token refresh works transparently when access token expires.
+- [ ] OAuth 2.0 (3LO) flow completes end-to-end (future phase).
 - [ ] JQL query returns only assigned tickets with empty descriptions.
-- [ ] Markdown input is correctly converted to valid ADF.
+- [ ] Plain text input is correctly converted to valid ADF paragraphs.
 - [ ] Jira API accepts the ADF payload and updates the ticket description.
 - [ ] Card stack renders with correct layering and animations.
 - [ ] Card clears with animation after successful submission.
 - [ ] Empty state displays when no tickets remain.
 - [ ] Docker image builds and runs the app on port configurable via environment variable.
-- [ ] Multiple users can log in concurrently with independent sessions.
+- [ ] Multiple users can log in concurrently with independent sessions (future phase, with OAuth).
 
 ## 11. Related Specifications / Further Reading
 
