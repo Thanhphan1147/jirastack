@@ -1,7 +1,7 @@
 import { config, getJiraAuthHeader } from './config.js';
 
 const JQL_EMPTY_DESCRIPTION =
-	'assignee = currentUser() AND description is EMPTY ORDER BY priority DESC, created ASC';
+	'assignee = currentUser() AND description is EMPTY AND statusCategory != Done ORDER BY priority DESC, created ASC';
 
 export interface JiraTicket {
 	key: string;

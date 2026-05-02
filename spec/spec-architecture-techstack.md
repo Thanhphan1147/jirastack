@@ -111,7 +111,7 @@ Authentication uses Jira API tokens with HTTP Basic Auth. The `Authorization` he
 ### JQL Query for Fetching Tickets
 
 ```
-assignee = currentUser() AND description is EMPTY ORDER BY priority DESC, created ASC
+assignee = currentUser() AND description is EMPTY AND statusCategory != Done ORDER BY priority DESC, created ASC
 ```
 
 ### ADF Document Structure (simplified example)
