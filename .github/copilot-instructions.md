@@ -48,6 +48,13 @@ When writing or editing `.svelte` or `.svelte.ts` files, use the Svelte MCP tool
 2. Use `get-documentation` to fetch sections needed for the task
 3. **Always** run `svelte-autofixer` on any Svelte code before finalizing
 
+## Development Workflow
+
+1. **Write code** — implement the feature or fix
+2. **Run unit tests** — `npm run test:unit` (Vitest)
+3. **Redeploy with Docker** — `docker compose up --build -d` to rebuild and restart the app
+4. **E2E test with Chrome** — use the Chrome MCP server (`chrome-dev-tools-*` tools) to navigate the running app, take screenshots, and verify behavior end-to-end
+
 ## Git Workflow
 
 - Create a **feature branch** for each TODO item (e.g., `feat/oauth-login`, `feat/card-stack-ui`).

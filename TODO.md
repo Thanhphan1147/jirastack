@@ -7,7 +7,9 @@
 - [ ] Set up adapter-node for self-hosted deployment
 - [ ] Configure environment variables schema (client ID, secret, redirect URI, port)
 - [ ] Create project directory structure (`lib/server/`, `lib/components/`, `routes/`)
-- [ ] Add Dockerfile and docker-compose.yml
+- [ ] Create Dockerfile (multi-stage build: install → build → production with Node.js)
+- [ ] Create docker-compose.yml with environment variable template
+- [ ] Add `.env.example` with all required variables documented
 - [ ] Set up Vitest and Playwright configs
 
 ## Phase 2: Authentication (OAuth 2.0 3LO)
@@ -82,10 +84,6 @@
 - [ ] E2E tests: Login → view cards → submit description → card clears (Playwright)
 - [ ] E2E test: Empty state when no tickets
 
-## Phase 10: Deployment & Documentation
+## Phase 10: Documentation
 
-- [ ] Finalize Dockerfile (multi-stage build, minimal image)
-- [ ] Add docker-compose.yml with environment variable template
 - [ ] Write README: setup instructions, Atlassian app registration, env vars, running locally
-- [ ] Add `.env.example` with all required variables documented
-- [ ] Test Docker build and run end-to-end
