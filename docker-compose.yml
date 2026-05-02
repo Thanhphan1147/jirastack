@@ -1,0 +1,12 @@
+services:
+  jirastack:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - ATLASSIAN_CLIENT_ID=${ATLASSIAN_CLIENT_ID}
+      - ATLASSIAN_CLIENT_SECRET=${ATLASSIAN_CLIENT_SECRET}
+      - ATLASSIAN_REDIRECT_URI=${ATLASSIAN_REDIRECT_URI:-http://localhost:3000/auth/callback}
+      - ORIGIN=${ORIGIN:-http://localhost:3000}
+      - PORT=3000
+    restart: unless-stopped
