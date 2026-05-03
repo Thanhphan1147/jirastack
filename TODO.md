@@ -51,6 +51,14 @@
 - [ ] Add success feedback (card clears) and error feedback (toast/inline message)
 - [ ] Handle empty submission validation (prevent submitting blank descriptions)
 
+## Phase 6.5: Card Actions (Reject / Done)
+
+- [ ] Add `transitionTicket()` to Jira client — fetches available transitions and executes matching one
+- [ ] Create `POST /api/tickets/[key]/transition` endpoint — accepts `{ status: "Done" | "Rejected" }`
+- [ ] Add Reject and Done buttons to top card in CardStack
+- [ ] Wire buttons to transition API, remove card from stack on success
+- [ ] Add loading spinner on action buttons during API call
+
 ## Phase 7: Page Layout & Navigation
 
 - [ ] Create top bar component (wordmark + user info)

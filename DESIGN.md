@@ -67,6 +67,12 @@ Extremely minimalist, clean, and calm. Inspired by Notion and Things. Heavy use 
   - Issue key (e.g. `PROJ-142`) — muted, uppercase, 13px
   - Summary/title — bold, 20px, single or two lines max
   - Pills row: issue type + priority as small rounded pills with subtle background tints
+- Card actions (top card only):
+  - Separator: 1px top border (`--color-border` lighter variant)
+  - **Reject** button: text-only, gray → red on hover, left-aligned
+  - **Done** button: text-only, gray → green on hover, beside Reject
+  - Both buttons show a small spinner while the API call is in progress
+  - Disabled state when any action is loading
 
 ### Description Editor
 
