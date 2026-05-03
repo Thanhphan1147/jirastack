@@ -80,12 +80,12 @@
 		<p class="text-[15px] text-gray-500">All your tickets have descriptions.</p>
 	</div>
 {:else}
-	<div class="relative" style="min-height: 200px;">
+	<div class="relative pb-4">
 		{#each visibleTickets as ticket, i (ticket.key)}
 			<div
-				class="absolute inset-x-0 origin-top"
+				class="{i === 0 ? 'relative' : 'absolute inset-x-0'} origin-top"
 				style="
-					top: {i * 8}px;
+					{i > 0 ? `top: ${i * 8}px;` : ''}
 					z-index: {MAX_VISIBLE - i};
 					opacity: {i === 0 ? 1 : i === 1 ? 0.6 : 0.3};
 					transform: scale({1 - i * 0.03});
