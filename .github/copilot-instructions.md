@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-JiraStack is a minimalist SPA that connects to Jira Cloud via API token, fetches assigned tickets without descriptions as a card stack, lets users write descriptions in plain text (converted to ADF server-side), and clears cards as they submit.
+JiraStack is a minimalist SPA that connects to Jira Cloud via API token, fetches tickets assigned to or created by the user without descriptions as a card stack, lets users write descriptions in plain text (converted to ADF server-side), and clears cards as they submit.
 
 ## Tech Stack
 
