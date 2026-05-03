@@ -118,3 +118,34 @@ export async function fetchCurrentUser(): Promise<JiraUser> {
 		emailAddress: data.emailAddress
 	};
 }
+
+interface JiraTransition {
+	id: string;
+	name: string;
+	to: { name: string; statusCategory: { key: string } };
+}
+
+/**
+ * Fetches available transitions for an issue, finds one matching the target
+ * status name (case-insensitive), and executes it.
+ */
+export async function transitionTicket(issueKey: string, targetStatus: string): Promise<void> {
+	const response = await jiraFetch(`/issue/${issueKey}/transitions`);
+	const data: { transitions: JiraTransition[] } = await response.json();
+
+	const target = targetStatus.toLowerCase();
+	const transition = data.transitions.find((t) => t.name.toLowerCase() === target);
+
+	if (!transition) {
+		const available = data.transitions.map((t) => t.name).join(', ');
+		throw new JiraApiError(
+			`No "${targetStatus}" transition available for ${issueKey}. Available: ${available}`,
+			422
+		);
+	}
+
+	await jiraFetch(`/issue/${issueKey}/transitions`, {
+		method: 'POST',
+		body: JSON.stringify({ transition: { id: transition.id } })
+	});
+}

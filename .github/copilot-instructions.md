@@ -17,7 +17,7 @@ JiraStack is a minimalist SPA that connects to Jira Cloud via API token, fetches
 ```
 src/
   routes/           # SvelteKit pages and API endpoints
-    api/tickets/    # GET /api/tickets, POST /api/tickets/[key]/description
+    api/tickets/    # GET /api/tickets, POST /api/tickets/[key]/description, POST /api/tickets/[key]/transition
   lib/
     server/         # Server-only: Jira API client, config
     components/     # Svelte UI components (CardStack, TicketCard, DescriptionEditor)

@@ -39,6 +39,10 @@
 		tickets = tickets.slice(1);
 	}
 
+	function handleTicketRemoved(key: string) {
+		tickets = tickets.filter((t) => t.key !== key);
+	}
+
 	$effect(() => {
 		fetchTickets();
 	});
@@ -64,7 +68,7 @@
 				<p class="text-[15px] text-red-600">{error}</p>
 			</div>
 		{:else}
-			<CardStack {tickets} />
+			<CardStack {tickets} ondone={handleTicketRemoved} onreject={handleTicketRemoved} />
 
 			{#if currentTicket}
 				{#key currentTicket.key}

@@ -67,6 +67,7 @@ This specification covers:
 - **REQ-001**: On login, the application SHALL automatically fetch all Jira tickets assigned to or created by the authenticated user that have an empty or missing description and are not in a Done status category.
 - **REQ-002**: Tickets SHALL be displayed as a **card stack** — one card visible at a time, with a peek of cards beneath.
 - **REQ-003**: Each card SHALL display at minimum: issue key, summary (title), issue type, and priority.
+- **REQ-003a**: Each card SHALL provide **Reject** and **Done** action buttons that transition the ticket's status in Jira and remove the card from the stack.
 - **REQ-004**: The user SHALL fill in the description using a **plain text area**.
 - **REQ-005**: On submission, the plain text SHALL be converted to ADF (each line becomes a paragraph node) and pushed to the Jira Cloud API to update the ticket's description.
 - **REQ-006**: After successful submission, the card SHALL animate out of the stack (clear away) and the next card SHALL become active.
@@ -106,6 +107,8 @@ Authentication uses Jira API tokens with HTTP Basic Auth. The `Authorization` he
 | --------- | -------- | ------ | ------- |
 | Search issues | `{JIRA_BASE_URL}/rest/api/3/search/jql` | POST | Fetch tickets assigned to or created by the user with empty descriptions using JQL |
 | Update issue | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}` | PUT | Update ticket description with ADF content |
+| Get transitions | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}/transitions` | GET | Fetch available workflow transitions for a ticket |
+| Transition issue | `{JIRA_BASE_URL}/rest/api/3/issue/{issueKey}/transitions` | POST | Execute a workflow transition (Done, Rejected) |
 | Get myself | `{JIRA_BASE_URL}/rest/api/3/myself` | GET | Get current user profile |
 
 ### JQL Query for Fetching Tickets
